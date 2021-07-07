@@ -157,6 +157,7 @@ add_library(skyline SHARED
         ${source_DIR}/skyline/services/fssrv/IDirectory.cpp
         ${source_DIR}/skyline/services/nvdrv/INvDrvServices.cpp
         ${source_DIR}/skyline/services/nvdrv/driver.cpp
+        ${source_DIR}/skyline/services/nvdrv/core/nvmap.cpp
         ${source_DIR}/skyline/services/nvdrv/devices/nvdevice.cpp
         ${source_DIR}/skyline/services/nvdrv/devices/nvmap.cpp
         ${source_DIR}/skyline/services/nvdrv/devices/nvhost_ctrl_gpu.cpp

@@ -9,32 +9,60 @@
 #include "devices/nvhost_as_gpu.h"
 
 namespace skyline::service::nvdrv {
-    Driver::Driver(const DeviceState &state) : state(state), hostSyncpoint(state) {}
+    Driver::Driver(const DeviceState &state) : state(state) {}
 
-    u32 Driver::OpenDevice(std::string_view path) {
-        state.logger->Debug("Opening NVDRV device ({}): {}", fdIndex, path);
+    NvResult Driver::OpenDevice(std::string_view path, FileDescriptor fd, const SessionContext &ctx) {
+        state.logger->Debug("Opening NvDrv device ({}): {}", fd, path);
+        auto pathHash{util::Hash(path)};
 
-        switch (util::Hash(path)) {
-            #define NVDEVICE(type, name, devicePath)                     \
-                case util::Hash(devicePath): {                           \
-                    std::shared_ptr<device::type> device{};              \
-                    if (name.expired()) {                                \
-                        device = std::make_shared<device::type>(state);  \
-                        name = device;                                   \
-                    } else {                                             \
-                        device = name.lock();                            \
-                    }                                                    \
-                    devices.push_back(device);                           \
-                    break;                                               \
-                }
-            NVDEVICE_LIST
-            #undef NVDEVICE
+        #define ENTRY(path, object) \
+            case util::Hash(path): \
+                devices.emplace(fd, std::make_unique<device::object>(state, ctx)); \
+                return state::Success;
 
+        switch (pathHash) {
+            ENTRY("/dev/nvmap", nvmap::NvMap)
+            ENTRY("/dev/nvhost-ctrl", nvhost::Ctrl)
             default:
-                throw exception("Cannot find NVDRV device");
+                break;
         }
 
-        return fdIndex++;
+        if (ctx.perms.AccessGpu) {
+            switch (pathHash) {
+                ENTRY("/dev/nvhost-as-gpu", nvhost::AsGpu)
+                ENTRY("/dev/nvhost-ctrl-gpu", nvhost::Ctrl)
+                ENTRY("/dev/nvhost-gpu", nvhost::Gpu)
+                default:
+                    break;
+            }
+        }
+
+        if (ctx.perms.AccessVic) {
+            switch (pathHash) {
+                ENTRY("/dev/nvhost-vic", nvhost::Vic)
+                default:
+                    break;
+            }
+        }
+
+        if (ctx.perms.AccessVideoDecoder) {
+            switch (pathHash) {
+                ENTRY("/dev/nvhost-nvdec", nvhost::NvDec)
+                default:
+                    break;
+            }
+        }
+
+        if (ctx.perms.AccessJpeg) {
+            switch (pathHash) {
+                ENTRY("/dev/nvhost-nvjpg", nvhost::NvJpg)
+                default:
+                    break;
+            }
+        }
+
+        // Device doesn't exist/no permissions
+        return NvError::FileOperationFailed;
     }
 
     std::shared_ptr<device::NvDevice> Driver::GetDevice(u32 fd) {

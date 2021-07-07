@@ -4,6 +4,7 @@
 #pragma once
 
 #include <services/serviceman.h>
+#include "types.h"
 
 namespace skyline::service::nvdrv {
     class Driver;
@@ -15,8 +16,12 @@ namespace skyline::service::nvdrv {
     class INvDrvServices : public BaseService {
       private:
         std::shared_ptr<Driver> driver;
+        SessionContext ctx{};
+
+        FileDescriptor nextFdIndex{};
 
       public:
+
         INvDrvServices(const DeviceState &state, ServiceManager &manager);
 
         /**
