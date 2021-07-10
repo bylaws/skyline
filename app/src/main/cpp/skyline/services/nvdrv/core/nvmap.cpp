@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT or MPL-2.0
+// Copyright © 2021 Skyline Team and Contributors (https://github.com/skyline-emu/)
+
 #include "nvmap.h"
 
 namespace skyline::service::nvdrv::core {

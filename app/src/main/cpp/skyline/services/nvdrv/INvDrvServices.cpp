@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT or MPL-2.0
 // Copyright © 2020 Skyline Team and Contributors (https://github.com/skyline-emu/)
 
 #include <kernel/types/KProcess.h>
@@ -29,6 +29,9 @@ namespace skyline::service::nvdrv {
         return NVRESULT(NvResult::Success);
     }
 
+    static NvResult ConvertToNvResult(PosixResult err) {
+    }
+
     Result INvDrvServices::Ioctl(type::KSession &session, ipc::IpcRequest &request, ipc::IpcResponse &response) {
         auto fd{request.Pop<FileDescriptor>()};
         auto ioctl{request.Pop<IoctlDescriptor>()};
@@ -53,8 +56,6 @@ namespace skyline::service::nvdrv {
 
         auto device{driver->GetDevice(fd)};
 
-
-
         span<u8> buffer{};
         if (request.inputBuf.empty() || request.outputBuf.empty()) {
             if (!request.inputBuf.empty())
@@ -72,8 +73,7 @@ namespace skyline::service::nvdrv {
             throw exception("IOCTL Input Buffer (0x{:X}) != Output Buffer (0x{:X})", request.inputBuf[0].data(), request.outputBuf[0].data());
         }
 
-        response.Push(device->HandleIoctl(cmd, device::IoctlType::Ioctl, buffer, {}));
-        return {};
+        return NVRESULT(device->Ioctl(ioctl, buffer));
     }
 
     Result INvDrvServices::Close(type::KSession &session, ipc::IpcRequest &request, ipc::IpcResponse &response) {

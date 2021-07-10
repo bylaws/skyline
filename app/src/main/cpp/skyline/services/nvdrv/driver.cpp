@@ -1,31 +1,35 @@
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT or MPL-2.0
 // Copyright © 2020 Skyline Team and Contributors (https://github.com/skyline-emu/)
 
 #include "driver.h"
-#include "devices/nvhost_ctrl.h"
 #include "devices/nvhost_ctrl_gpu.h"
 #include "devices/nvmap.h"
 #include "devices/nvhost_channel.h"
 #include "devices/nvhost_as_gpu.h"
 
 namespace skyline::service::nvdrv {
-    Driver::Driver(const DeviceState &state) : state(state) {}
+    Driver::Driver(const DeviceState &state) : state(state), core(state) {}
 
     NvResult Driver::OpenDevice(std::string_view path, FileDescriptor fd, const SessionContext &ctx) {
         state.logger->Debug("Opening NvDrv device ({}): {}", fd, path);
         auto pathHash{util::Hash(path)};
 
-        #define ENTRY(path, object) \
-            case util::Hash(path): \
-                devices.emplace(fd, std::make_unique<device::object>(state, ctx)); \
-                return state::Success;
+        #define DEVICE_SWITCH(cases) \
+            switch (pathHash) {      \
+                cases;               \
+                default:             \
+                    break;           \
+            }
 
-        switch (pathHash) {
-            ENTRY("/dev/nvmap", nvmap::NvMap)
-            ENTRY("/dev/nvhost-ctrl", nvhost::Ctrl)
-            default:
-                break;
-        }
+        #define DEVICE_CASE(path, object) \
+            case util::Hash(path): \
+                devices.emplace(fd, std::make_unique<device::object>(state, core, ctx)); \
+                return NvResult::Success;
+
+        DEVICE_SWITCH(
+            DEVICE_CASE("/dev/nvmap", NvMap)
+     //       DEVICE_CASE("/dev/nvhost-ctrl", nvhost::Ctrl)
+        );
 
         if (ctx.perms.AccessGpu) {
             switch (pathHash) {
@@ -61,8 +65,11 @@ namespace skyline::service::nvdrv {
             }
         }
 
+        #undef DEVICE_CASE
+        #undef DEVICE_SWITCH
+
         // Device doesn't exist/no permissions
-        return NvError::FileOperationFailed;
+        return NvResult::FileOperationFailed;
     }
 
     std::shared_ptr<device::NvDevice> Driver::GetDevice(u32 fd) {

@@ -82,26 +82,27 @@ namespace skyline {
 
     /**
      * @brief A wrapper around std::optional that also stores a HOS result code
-     * @tparam T The object type to hold
+     * @tparam ValueType The object type to hold
+     * @tparam ResultType The result type to hold
      */
-    template<typename T>
+    template<typename ValueType, typename ResultType = Result>
     class ResultValue {
-        static_assert(!std::is_same<T, Result>::value);
+        static_assert(!std::is_same<ValueType, ResultType>::value);
 
       private:
-        std::optional<T> value;
+        std::optional<ValueType> value;
 
       public:
-        Result result;
+        ResultType result;
 
-        constexpr ResultValue(T value) : value(value) {};
+        constexpr ResultValue(ValueType value) : value(value) {};
 
-        constexpr ResultValue(Result result) : result(result) {};
+        constexpr ResultValue(ResultType result) : result(result) {};
 
         template<typename U>
         constexpr ResultValue(ResultValue<U> result) : result(result) {};
 
-        constexpr operator Result() const {
+        constexpr operator ResultType() const {
             return result;
         }
 
@@ -109,11 +110,11 @@ namespace skyline {
             return value.has_value();
         }
 
-        constexpr T& operator*()  {
+        constexpr ValueType& operator*()  {
             return *value;
         }
 
-        constexpr T* operator->()  {
+        constexpr ValueType* operator->()  {
             return &*value;
         }
     };

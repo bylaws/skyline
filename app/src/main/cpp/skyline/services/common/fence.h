@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <services/nvdrv/devices/nvhost_syncpoint.h>
+#include <services/nvdrv/core/syncpoint_manager.h>
 
 namespace skyline::service::nvdrv {
     /**
@@ -16,7 +16,7 @@ namespace skyline::service::nvdrv {
         /**
          * @brief Synchronizes the fence's value with its underlying syncpoint
          */
-        void UpdateValue(NvHostSyncpoint &hostSyncpoint) {
+        void UpdateValue(core::SyncpointManager &hostSyncpoint) {
             value = hostSyncpoint.UpdateMin(id);
         }
     };

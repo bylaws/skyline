@@ -1,9 +1,9 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT or MPL-2.0
 // Copyright © 2021 Skyline Team and Contributors (https://github.com/skyline-emu/)
 
+#include <services/nvdrv/core/nvmap.h>
 #include "deserialisation/deserialisation.h"
 #include "nvmap.h"
-#include "../core/nvmap.h"
 
 namespace skyline::service::nvdrv::device {
     NvMap::NvMap(const DeviceState &state, Core &core, const SessionContext &ctx) : NvDevice(state, core, ctx) {}
@@ -119,15 +119,15 @@ namespace skyline::service::nvdrv::device {
         IOCTL_CASE_ARGS(INOUT, SIZE(0x8),  MAGIC(NvMapMagic), FUNC(0x1),
                         Create, ARGS(In<u32>, Out<NvMapCore::Handle::Id>))
         IOCTL_CASE_ARGS(INOUT, SIZE(0x8),  MAGIC(NvMapMagic), FUNC(0x3),
-                        FromId,  ARGS(In<NvMapCore::Handle::Id>, Out<NvMapCore::Handle::Id>))
+                        FromId, ARGS(In<NvMapCore::Handle::Id>, Out<NvMapCore::Handle::Id>))
         IOCTL_CASE_ARGS(INOUT, SIZE(0x20), MAGIC(NvMapMagic), FUNC(0x4),
-                        Alloc, ARGS(In<NvMapCore::Handle::Id>, In<u32>, In<NvMapCore::Handle::Flags>, InOut<u32>, In<u8>, Pad<u8, 0x7>, In<u64>))
+                        Alloc,  ARGS(In<NvMapCore::Handle::Id>, In<u32>, In<NvMapCore::Handle::Flags>, InOut<u32>, In<u8>, Pad<u8, 0x7>, In<u64>))
         IOCTL_CASE_ARGS(INOUT, SIZE(0x18), MAGIC(NvMapMagic), FUNC(0x5),
-                        Free, ARGS(In<NvMapCore::Handle::Id>, Pad<u32>, Out<u64>, Out<u32>, Out<NvMapCore::Handle::Flags>))
+                        Free,   ARGS(In<NvMapCore::Handle::Id>, Pad<u32>, Out<u64>, Out<u32>, Out<NvMapCore::Handle::Flags>))
         IOCTL_CASE_ARGS(INOUT, SIZE(0xC),  MAGIC(NvMapMagic), FUNC(0x9),
-                        Param, ARGS(In<NvMapCore::Handle::Id>, In<HandleParameterType>, Out<u32>))
+                        Param,  ARGS(In<NvMapCore::Handle::Id>, In<HandleParameterType>, Out<u32>))
         IOCTL_CASE_ARGS(INOUT, SIZE(0x8),  MAGIC(NvMapMagic), FUNC(0xE),
-                        GetId, ARGS(Out<NvMapCore::Handle::Id>, In<NvMapCore::Handle::Id>))
+                        GetId,  ARGS(Out<NvMapCore::Handle::Id>, In<NvMapCore::Handle::Id>))
     }))
 #include "deserialisation/macro_undef.h"
 }
